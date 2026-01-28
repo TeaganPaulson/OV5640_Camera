@@ -10,13 +10,18 @@
 #include "esp_intr_types.h" 
 #include "esp_intr_alloc.h"
 #include "esp_task_wdt.h"
+#include "esp_system.h"
+#include "nvs_flash.h"
+#include "esp_psram.h"
+
 
   // ==== CAMERA PIN CONFIGURATION FOR S3-N16R8 (Matching Adafruit Labels) ==== 
-#define PWDN_GPIO_NUM         -1//37
-#define RESET_GPIO_NUM        -1//19
+#define PWDN_GPIO_NUM         10//37
+#define RESET_GPIO_NUM        9
+//19
 #define XCLK_GPIO_NUM         -1//42// Adjust based on your hardware
-#define SIOD_GPIO_NUM         17// Adjust based on your hardware sda
-#define SIOC_GPIO_NUM         18// Adjust based on your hardware
+#define SIOD_GPIO_NUM         12// Adjust based on your hardware sda
+#define SIOC_GPIO_NUM         11 // Adjust based on your hardware
 
 // Camera data pins (D0–D7 → Y0–Y7)
 #define Y0_GPIO_NUM            38 // D2
@@ -29,21 +34,18 @@
 #define Y7_GPIO_NUM            4 // D9
 
 // Synchronization pins
-#define VSYNC_GPIO_NUM         35 // Frame valid
+#define VSYNC_GPIO_NUM         1 // Frame valid
 #define HREF_GPIO_NUM          2  // Line valid
 #define PCLK_GPIO_NUM          45 // Pixel clock
 
 #define TAG ("camera_example")
 void app_main() {
-    // ESP_LOGI(TAG, "Starting camera initialization...");
-
     // Give the camera sensor time to power up
-    vTaskDelay(pdMS_TO_TICKS(100));
     
     // Camera configuration
     camera_config_t config = {
-    .ledc_channel = LEDC_CHANNEL_1, // Use channel 0
-    .ledc_timer = LEDC_TIMER_1,
+    .ledc_channel = -1, // Use channel 0
+    .ledc_timer = -1,
     .pin_d0 = Y0_GPIO_NUM,
     .pin_d1 = Y1_GPIO_NUM,
     .pin_d2 = Y2_GPIO_NUM,  
@@ -61,7 +63,7 @@ void app_main() {
     .pin_pwdn = PWDN_GPIO_NUM,
     .pin_reset = RESET_GPIO_NUM,
 
-    .xclk_freq_hz = 20000000, // 24 MHz
+    .xclk_freq_hz = 24000, // 24 MHz
     .pixel_format = PIXFORMAT_JPEG, // <- Change from JPEG
     .frame_size = FRAMESIZE_QVGA,
     .jpeg_quality = 32, // Quality from 0-63 (lower means better)
@@ -71,11 +73,16 @@ void app_main() {
 };
 
     // ESP_LOGI(TAG, "Initializing camera with config...");
-    
+    esp_err_t ret = esp_psram_init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "PSRAM initialization failed: %s", esp_err_to_name(ret));
+        return;
+    }
     // Initialize the camera
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "Camera init failed with error 0x%x", err);
+        esp_camera_deinit();
         return;
     }
     
