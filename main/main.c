@@ -20,8 +20,8 @@
 #define RESET_GPIO_NUM        9
 //19
 #define XCLK_GPIO_NUM         -1//42// Adjust based on your hardware
-#define SIOD_GPIO_NUM         12// Adjust based on your hardware sda
-#define SIOC_GPIO_NUM         11 // Adjust based on your hardware
+#define SIOD_GPIO_NUM         17// Adjust based on your hardware sda
+#define SIOC_GPIO_NUM         18 // Adjust based on your hardware
 
 // Camera data pins (D0–D7 → Y0–Y7)
 #define Y0_GPIO_NUM            38 // D2
@@ -72,12 +72,6 @@ void app_main() {
     .sccb_i2c_port = 1
 };
 
-    // ESP_LOGI(TAG, "Initializing camera with config...");
-    esp_err_t ret = esp_psram_init();
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "PSRAM initialization failed: %s", esp_err_to_name(ret));
-        return;
-    }
     // Initialize the camera
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
