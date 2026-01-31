@@ -14,14 +14,26 @@
 #include "nvs_flash.h"
 #include "esp_psram.h"
 
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
+#include "driver/sdmmc_host.h"
 
-  // ==== CAMERA PIN CONFIGURATION FOR S3-N16R8 (Matching Adafruit Labels) ==== 
+#define MOUNT_POINT "/sdcard"
+#define SDCARD_CLK              GPIO_NUM_18
+#define SDCARD_CMD              GPIO_NUM_15
+#define SDCARD_D0               GPIO_NUM_16
+#define SDCARD_D1               GPIO_NUM_6
+#define SDCARD_D2               GPIO_NUM_5
+#define SDCARD_D3               GPIO_NUM_7
+    
+// ==== CAMERA PIN CONFIGURATION FOR S3-N16R8 (Matching Adafruit Labels) ==== 
 #define PWDN_GPIO_NUM         10//37
 #define RESET_GPIO_NUM        9
 //19
 #define XCLK_GPIO_NUM         -1//42// Adjust based on your hardware
-#define SIOD_GPIO_NUM         17// Adjust based on your hardware sda
-#define SIOC_GPIO_NUM         18 // Adjust based on your hardware
+#define SIOD_GPIO_NUM         14// Adjust based on your hardware sda
+#define SIOC_GPIO_NUM         12
+// Adjust based on your hardware
 
 // Camera data pins (D0–D7 → Y0–Y7)
 #define Y0_GPIO_NUM            38 // D2
@@ -39,9 +51,56 @@
 #define PCLK_GPIO_NUM          45 // Pixel clock
 
 #define TAG ("camera_example")
+
+void init_sdmmc_fs()
+{
+    esp_vfs_fat_sdmmc_mount_config_t mount_config =
+    {
+        .format_if_mount_failed = false,
+        .max_files = 5,
+        .allocation_unit_size = 16 * 1024
+    };
+
+    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+    host.max_freq_khz = 40000; // 20 MHz
+    sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+    slot_config.width = 4;
+    slot_config.clk = SDCARD_CLK;
+    slot_config.cmd = SDCARD_CMD;
+    slot_config.d0 = SDCARD_D0;
+    slot_config.d1 = SDCARD_D1;
+    slot_config.d2 = SDCARD_D2;
+    slot_config.d3 = SDCARD_D3;
+
+
+    sdmmc_card_t* card;
+    const char mount_point[] = MOUNT_POINT;
+    slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+
+    esp_err_t ret = esp_vfs_fat_sdmmc_mount(mount_point, &host, &slot_config, &mount_config, &card);
+
+    if ( ret != ESP_OK )
+    {
+        if ( ret == ESP_FAIL )
+        {
+            ESP_LOGE(TAG, "Failed to mount filesystem.");
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to initialize card (%s).", esp_err_to_name(ret));
+        }
+    }
+    else
+    {
+        ESP_LOGI(TAG, "SDMMC card mounted at %s", mount_point);
+        sdmmc_card_print_info(stdout, card);
+    }
+}
+
+
 void app_main() {
     // Give the camera sensor time to power up
-    
+    init_sdmmc_fs();
     // Camera configuration
     camera_config_t config = {
     .ledc_channel = -1, // Use channel 0
