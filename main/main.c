@@ -17,9 +17,10 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
+#include "zigbee_pro.h"
 
 #define MOUNT_POINT "/sdcard"
-#define SDCARD_CLK              GPIO_NUM_18
+#define SDCARD_CLK              GPIO_NUM_8
 #define SDCARD_CMD              GPIO_NUM_15
 #define SDCARD_D0               GPIO_NUM_16
 #define SDCARD_D1               GPIO_NUM_6
@@ -122,9 +123,9 @@ void app_main() {
     .pin_pwdn = PWDN_GPIO_NUM,
     .pin_reset = RESET_GPIO_NUM,
 
-    .xclk_freq_hz = 24000, // 24 MHz
+    .xclk_freq_hz = 20000, // 24 MHz
     .pixel_format = PIXFORMAT_JPEG, // <- Change from JPEG
-    .frame_size = FRAMESIZE_QVGA,
+    .frame_size = FRAMESIZE_HD,
     .jpeg_quality = 32, // Quality from 0-63 (lower means better)
     .fb_count = 1,
     .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
@@ -142,7 +143,10 @@ void app_main() {
     ESP_LOGI(TAG, "Camera initialized successfully!");
 
     // // Configure camera for night vision
-    // sensor_t *s = esp_camera_sensor_get();
+    sensor_t *s = esp_camera_sensor_get();
+    s->set_vflip(s, 1); // Flip vertically
+    s->set_hmirror(s, 1); // Mirror horizontally
+    s->set_xclk(s, config.ledc_channel, 20000); // Set XCLK to 20MHz for OV5640
     // if (s != NULL) {
     //     // Moderate settings for night vision
     //     s->set_brightness(s, 1);      // Brightness +1 (mild boost)
@@ -171,22 +175,16 @@ void app_main() {
 
         ESP_LOGI(TAG, "Picture taken! Size: %zu bytes", pic->len);
 
-        // Print the picture data as base64 (optional)
-        size_t output_len;
-        unsigned char *output_buf = NULL;
-        mbedtls_base64_encode(NULL, 0, &output_len, pic->buf, pic->len);
-        output_buf = malloc(output_len);
-        if (output_buf) {
-            mbedtls_base64_encode(output_buf, output_len, &output_len, pic->buf, pic->len);
-            ESP_LOGI(TAG, "Picture (Base64): %s", output_buf);
-            free(output_buf);
+        FILE* f = fopen(MOUNT_POINT "/image.jpg", "wb");
+        if (f != NULL)
+        {
+            fwrite(pic->buf, 1, pic->len, f);
+            fclose(f);
         }
-
-        // Return the frame buffer back to the driver
         esp_camera_fb_return(pic);
 
         // Wait for 10 seconds
-        vTaskDelay(pdMS_TO_TICKS(100000));
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 
     // Deinitialize the camera (this will never be reached in the current loop)
