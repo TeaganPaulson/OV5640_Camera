@@ -1,32 +1,64 @@
-# _Sample project_
+# OV5640 Camera Project
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+This ESP-IDF project demonstrates how to interface with the OV5640 camera module on an ESP32 microcontroller. The OV5640 is a 5-megapixel CMOS image sensor capable of capturing high-resolution images and videos, commonly used in embedded vision applications.
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+The project initializes the camera, configures it for basic image capture, and provides examples for streaming video or taking snapshots. It leverages the ESP32's I2C and SPI interfaces for communication with the camera module.
 
+## Prerequisites
 
+- ESP32 development board (e.g., ESP32-WROOM-32)
+- OV5640 camera module
+- ESP-IDF toolchain installed (version 4.4 or later recommended)
+- Visual Studio Code with ESP-IDF extension (optional, for development)
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+## How to Build and Run
 
-## Example folder contents
+1. Clone or copy this project to your workspace.
+2. Open the project in VS Code with ESP-IDF extension.
+3. Configure the project: `idf.py menuconfig` (set camera pins, resolution, etc.)
+4. Build the project: `idf.py build`
+5. Flash to ESP32: `idf.py flash`
+6. Monitor output: `idf.py monitor`
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+For more details on ESP-IDF setup, refer to the [official documentation](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html).
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+## Example Usage
 
-Below is short explanation of remaining files in the project folder.
+The main application in `main.c` initializes the camera and starts capturing frames. You can modify the code to integrate with Wi-Fi for streaming or save images to SD card.
+
+## Project Structure
 
 ```
-├── CMakeLists.txt
+├── CMakeLists.txt          # Main project CMake configuration
 ├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
+│   ├── CMakeLists.txt      # Component CMake configuration
+│   └── main.c              # Main application code
+├── components              # Custom components (if any)
+│   └── camera              # Camera driver component
+└── README.md               # This file
 ```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.
+
+- `main.c`: Contains the application logic for camera initialization and capture.
+- `components/camera/`: Includes drivers for OV5640 (based on ESP-IDF camera components).
+
+## Configuration
+
+Use `idf.py menuconfig` to configure:
+- Camera model: OV5640
+- Pin assignments for I2C/SPI
+- Image resolution (e.g., 640x480, 1280x720)
+- Frame rate and JPEG quality
+
+## Troubleshooting
+
+- Ensure proper wiring: Connect OV5640 to ESP32 pins as per datasheet.
+- Check power supply: OV5640 requires stable 3.3V.
+- For issues, refer to ESP-IDF camera examples or community forums.
+
+## Contributing
+
+Feel free to submit issues or pull requests for improvements.
+
+## License
+
+This project is licensed under the MIT License.

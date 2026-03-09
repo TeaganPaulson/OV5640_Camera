@@ -225,15 +225,6 @@ void app_main()
     }
     init_sdmmc_fs();
     // Test SD card write
-    FILE *test = fopen("/sdcard/test.txt", "w");
-    if (test) {
-        fprintf(test, "test");
-        fclose(test);
-        ESP_LOGI(TAG, "SD write OK");
-    } else {
-        ESP_LOGE(TAG, "SD write failed, errno: %d", errno);
-    }
-
     const esp_timer_create_args_t timer_args = {
         .callback = (esp_timer_cb_t)take_picture,
         .name = "picture_timer"
@@ -243,8 +234,6 @@ void app_main()
     esp_timer_start_periodic(timer, 250000); // 250 ms = 4 fps
 
     while (1) {
-        
-        // take_picture();
 
         // Wait for 10 seconds
         vTaskDelay(pdMS_TO_TICKS(250));
