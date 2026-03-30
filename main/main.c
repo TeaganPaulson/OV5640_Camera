@@ -24,6 +24,7 @@
 #include "sdmmc_cmd.h"
 #include "driver/sdmmc_host.h"
 #include <errno.h>
+#include "gpio_manager.h"
 
 #define SDCARD_CLK              GPIO_NUM_8
 #define SDCARD_CMD              GPIO_NUM_15
@@ -139,7 +140,7 @@ int camera_setup()
         .pixel_format = PIXFORMAT_JPEG,
         .frame_size = FRAMESIZE_HD, // Reduced to HVGA (480x320) for reliability
         .jpeg_quality = 10,          // Moderate compression for stable operation
-        .fb_count = 4,               // single frame buffer for stability
+        .fb_count = 5,               // single frame buffer for stability
         .fb_location = CAMERA_FB_IN_PSRAM, // allocate the frame buffer in PSRAM
         .grab_mode = CAMERA_GRAB_LATEST, // wait for buffer to be empty before capturing
     };
@@ -214,6 +215,8 @@ void take_picture()
     }
 }
 
+
+
 void app_main() 
 {
 
@@ -223,7 +226,12 @@ void app_main()
         esp_restart();
         return;
     }
+    
+    sleep_wakeup_init();
+    gpio_init();
     init_sdmmc_fs();
+    zigbee_init();
+
     // Test SD card write
     const esp_timer_create_args_t timer_args = {
         .callback = (esp_timer_cb_t)take_picture,
@@ -234,6 +242,7 @@ void app_main()
     esp_timer_start_periodic(timer, 250000); // 250 ms = 4 fps
 
     while (1) {
+        
 
         // Wait for 10 seconds
         vTaskDelay(pdMS_TO_TICKS(250));
