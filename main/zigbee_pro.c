@@ -95,23 +95,25 @@ void zigbee_task(void* arg)
     while (1) 
     { 
 
-        if (pic == NULL) 
-        {
-            pic = esp_camera_fb_get();
-        }
+        // if (pic == NULL) 
+        // {
+        //     pic = esp_camera_fb_get();
+        // }
 
-        if (pic != NULL) 
-        {    
-            char header[100];
-            snprintf(header, sizeof(header), "\nIMG:%d\n",(int)pic->len);
-            zigbee_send(header, strlen(header)); // Send header first
+        // if (pic != NULL) 
+        // {    
+        //     char header[100];
+        //     snprintf(header, sizeof(header), "\nIMG:%d\n",(int)pic->len);
+        //     zigbee_send(header, strlen(header)); // Send header first
             
-            vTaskDelay(1000 / portTICK_PERIOD_MS); // Short delay before sending image
-            zigbee_send((char *)(pic->buf), pic->len);
-            esp_camera_fb_return(pic);
+        //     vTaskDelay(1000 / portTICK_PERIOD_MS); // Short delay before sending image
+        //     zigbee_send((char *)(pic->buf), pic->len);
+        //     esp_camera_fb_return(pic);
 
-            pic = NULL;
-        }
+        //     pic = NULL;
+        // }
+        zigbee_send("Hello from ESP32!\n", strlen("Hello from ESP32!\n")); // Send a test message
+        
         vTaskDelay(100 / portTICK_PERIOD_MS); // Adjust the delay as needed 
     } 
 }
